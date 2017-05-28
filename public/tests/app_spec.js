@@ -29,9 +29,29 @@ describe('LearnJS', function() {
     });
 
     describe('problem view', function() {
+        var view;
+
         it('has a title that includes the problem number', function() {
-            var view = learnjs.problemView('1');
-            expect(view.text()).toEqual('Problem #1 Coming soon!');
+            view = learnjs.problemView('1');
+            console.log("View" + view + " text: " + view.text());
+            expect(view.find('.title').text()).toEqual('Problem #1');
         });
+
+        describe('answer section', function() {
+            it('can check a correct answer by hitting a button', function() {
+                console.log("AnswerView" + view + " text: " + view.text());
+                view.find('.answer').val('true');
+                view.find('.check-btn').click();
+                expect(view.find('.result').text()).toEqual('Correct!');
+            });
+            it('rejects an incorrect answer', function() {
+                view.find('.answer').val('false');
+                view.find('.check-btn').click();
+                expect(view.find('.result').text()).toEqual('Incorrect!');
+            });
+        });
+
     });
+
+
 });
