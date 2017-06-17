@@ -15,13 +15,38 @@ learnjs.problems = [
     }
 ];
 
-/* ==================== Functions ================= */
+/* ==================== Utility Functions ================= */
 
 learnjs.applyObject = function(obj, elem) {
     for (var key in obj) {
         elem.find('[data-name="' + key + '"]').text(obj[key]);
     }
 };
+
+learnjs.flashElement = function(elem, content){
+    elem.fadeOut('fast', function() {
+        elem.html(content);
+        elem.fadeIn();
+    });
+};
+
+learnjs.template = function(name) {
+    return $('.templates .' + name).clone();
+};
+
+/* ==================== Problem app functions ============= */
+
+learnjs.buildCorrectFlash = function (problemNum) {
+    var correctFlash = learnjs.template('correct-flash');
+    var link = correctFlash.find('a');
+    if (problemNum < learnjs.problems.length) {
+        link.attr('href', '#problem-' + (problemNum + 1));
+    } else {
+        link.attr('href', '');
+        link.text("You're Finished!");
+    }
+    return correctFlash;
+}
 
 learnjs.problemView = function(data) {
     var problemNumber = parseInt(data, 10);
@@ -35,9 +60,11 @@ learnjs.problemView = function(data) {
     }
     function checkAnswerClick() {
         if (checkAnswer()) {
-            resultFlash.text('Correct!');
+            var correctFlash = learnjs.template('correct-flash');
+            correctFlash = learnjs.buildCorrectFlash(problemNumber);
+            learnjs.flashElement(resultFlash, correctFlash);
         } else {
-            resultFlash.text('Incorrect!');
+            learnjs.flashElement(resultFlash, 'Incorrect!');
         }
         return false;
     }
@@ -46,7 +73,7 @@ learnjs.problemView = function(data) {
     view.find('.title').text('Problem #' + problemNumber);
     learnjs.applyObject(problemData, view);
     return view;
-}
+};
 
 learnjs.showView = function(hash) {
     var routes = {
@@ -58,8 +85,7 @@ learnjs.showView = function(hash) {
     if (viewFn) {
         $('.view-container').empty().append(viewFn(hashParts[1]));
     }
-}
-
+};
 
 
 /* ===========================  Main ================= */
@@ -69,4 +95,4 @@ learnjs.appOnReady = function() {
         learnjs.showView(window.location.hash);
     };
     learnjs.showView(window.location.hash);
-}
+};
