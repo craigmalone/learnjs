@@ -33,21 +33,30 @@ describe('LearnJS', function() {
 
         it('has a title that includes the problem number', function() {
             view = learnjs.problemView('1');
-            console.log("View" + view + " text: " + view.text());
+            console.log("View: " + view + " text: " + view.text());
             expect(view.find('.title').text()).toEqual('Problem #1');
         });
 
         describe('answer section', function() {
+            var resultFlash;
+
+            beforeEach(function() {
+                spyOn(learnjs, 'flashElement');
+                resultFlash = view.find('.result');
+            });
+
             it('can check a correct answer by hitting a button', function() {
-                console.log("AnswerView" + view + " text: " + view.text());
                 view.find('.answer').val('true');
                 view.find('.check-btn').click();
-                expect(view.find('.result').text()).toEqual('Correct!');
+                var flashArgs = learnjs.flashElement.calls.argsFor(0);
+                expect(flashArgs[0]).toEqual(resultFlash);
+                expect(flashArgs[1].find('span').text()).toEqual('Correct!');
             });
+
             it('rejects an incorrect answer', function() {
                 view.find('.answer').val('false');
                 view.find('.check-btn').click();
-                expect(view.find('.result').text()).toEqual('Incorrect!');
+                expect(learnjs.flashElement).toHaveBeenCalledWith(resultFlash, 'Incorrect!');
             });
         });
 

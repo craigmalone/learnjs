@@ -53,11 +53,14 @@ learnjs.problemView = function(data) {
     var view = $('.templates .problem-view').clone();
     var problemData = learnjs.problems[problemNumber - 1];
     var resultFlash = view.find('.result');
+
     function checkAnswer() {
         var answer = view.find('.answer').val();
         var test = problemData.code.replace('__', answer) + '; problem();';
-        return eval(test);
+        var evaled = eval(test);
+        return evaled;
     }
+
     function checkAnswerClick() {
         if (checkAnswer()) {
             var correctFlash = learnjs.template('correct-flash');
@@ -75,9 +78,14 @@ learnjs.problemView = function(data) {
     return view;
 };
 
+learnjs.landingView = function() {
+    return learnjs.template('landing-view');
+}
+
 learnjs.showView = function(hash) {
     var routes = {
-        '#problem': learnjs.problemView
+        '#problem': learnjs.problemView,
+        '': learnjs.landingView
     };
 
     var hashParts = hash.split('-');
