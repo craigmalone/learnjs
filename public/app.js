@@ -1,6 +1,10 @@
 'use strict';
 
-var learnjs = {};
+var learnjs = {
+    poolId: 'us-east-1:567ff82e-f80d-4711-aee5-1a6b3c588d4c'
+};
+
+learnjs.identity = new $.Deferred();
 
 /* ==================  Data =====================  */
 
@@ -14,6 +18,60 @@ learnjs.problems = [
         code: "function problem() { return 42 === 6 * __; }"
     }
 ];
+
+/* ==================== Cognito and Google  ============ */
+
+learnjs.awsRefresh = function() {
+    var deferred = new $.Deferred();
+    AWS.config.credentials.refresh(function(err) {
+        if (err) {
+            deferred.reject(err);
+        } else {
+            deferred.resolve(AWS.config.credentials.identityId);
+        }
+    });
+    return deferred.promise();
+};
+
+/* Cant be part of learnjs namespace */
+
+
+function googleSignIn(googleUser) {
+    function refresh() {
+        return gapi.auth2.getAuthInstance().signIn({
+            prompt: 'login'
+        }).then(function(userUpdate) {
+            console.log("refresh(): updating token.")
+            var creds = AWS.config.credentials;
+            var newToken = userUpdate.getAuthResponse().id_token;
+            creds.params.Logins['accounts.google.com'] = newToken;
+            return learnjs.awsRefresh();
+        });
+    }
+
+    var id_token = googleUser.getAuthResponse().id_token;
+    var expires_in = googleUser.getAuthResponse().expires_in;
+    console.log("googleSignIn(): id_token=" + id_token + " expires_in=" + expires_in);
+    AWS.config.update({
+        region: 'us-east-1',
+        credentials: new AWS.CognitoIdentityCredentials({
+            IdentityPoolId: learnjs.poolId,
+            Logins: {
+                'accounts.google.com': id_token
+            }
+        })
+    });
+
+    /* After setting up the config, want to refresh the Cognito credentials. When this is done resolve the identity */
+    learnjs.awsRefresh().then(function(id) {
+        learnjs.identity.resolve({
+            id: id,
+            email: googleUser.getBasicProfile().getEmail(),
+            refresh: refresh
+        });
+    });
+}
+
 
 /* ==================== Utility Functions ================= */
 
@@ -47,10 +105,18 @@ learnjs.buildCorrectFlash = function (problemNum) {
         link.attr('href', '#problem-' + (problemNum + 1));
     } else {
         link.attr('href', '');
-        link.text("You're Finished!");
+        link.text(" You're Finished!");
     }
     return correctFlash;
 }
+
+learnjs.addProfileLink = function(profile) {
+    var link = learnjs.template('profile-link');
+    link.find('a').text(profile.email);
+    $('.signin-bar').prepend(link);
+}
+
+/* ===================== View functions ================== */
 
 learnjs.problemView = function(data) {
     var problemNumber = parseInt(data, 10);
@@ -95,9 +161,18 @@ learnjs.landingView = function() {
     return learnjs.template('landing-view');
 }
 
+learnjs.profileView = function() {
+    var view = learnjs.template('profile-view');
+    learnjs.identity.done(function(identity) {
+        view.find('.email').text(identity.email);
+    });
+    return view;
+}
+
 learnjs.showView = function(hash) {
     var routes = {
         '#problem': learnjs.problemView,
+        '#profile': learnjs.profileView,
         '#': learnjs.landingView,
         '': learnjs.landingView
     };
@@ -118,4 +193,5 @@ learnjs.appOnReady = function() {
         learnjs.showView(window.location.hash);
     };
     learnjs.showView(window.location.hash);
+    learnjs.identity.done(learnjs.addProfileLink);
 };

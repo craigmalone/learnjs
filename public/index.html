@@ -2,10 +2,12 @@
 <html>
   <head>
     <meta charset='utf-8'>
+    <meta name="google-signin-client_id" content="312197562856-3jq6qg2jh35udp8rkoidreg0l5t8gaeu.apps.googleusercontent.com"/>
     <title>Learn JS!</title>
     <link href='//fonts.googleapis.com/css?family=Raleway:400,300,600' rel='stylesheet' type='text/css'>
     <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.2/normalize.min.css'>
     <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css'>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script src='https://code.jquery.com/jquery-2.1.4.min.js'></script>
     <script src='/vendor.js'></script>
     <script src='/app.js'></script>
@@ -50,6 +52,20 @@
 
       .nav-container a { color: white; }
 
+      .navbar-padding {
+          padding-top: 7px;
+          display: inline-block;
+      }
+
+     .navbar-padding-lg {
+        padding-top: 12px;
+        display: inline-block;
+      }
+
+      .text-lg {
+        font-size: 32px;
+      }
+
     </style>
   </head>
   <body>
@@ -60,11 +76,21 @@
           <li><a class='text-lg' href="#">LearnJS</a></li>
           <li><a href="#problem-1">Start</a></li>
         </ul>
+
+        <div class='four columns signin-bar'>
+          <span class='navbar-padding u-pull-right'>
+            <span class="g-signin2" data-onsuccess="googleSignIn"></span>
+          </span>
+        </div>
       </div>
+
       <div class='view-container container'>
       </div>
 
       <div class='templates'>
+        <div class='profile-link navbar-padding-lg'>
+          <a href="#profile"></a>
+        </div>
 
         <li class='skip-btn'>
           <a>Skip This Problem</a>
@@ -93,6 +119,11 @@
               <p class='result'></p>
             </div>
           </form>
+        </div>
+
+        <div class='profile-view'>
+          <h3>Your Profile</h3>
+          <div class='email'></div>
         </div>
 
         <div class='correct-flash'>
