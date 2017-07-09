@@ -1,26 +1,26 @@
 {
   "AttributeDefinitions": [
     {
-      "AttributeName": "problemId", 
+      "AttributeName": "problemId",
       "AttributeType": "N"
-    }, 
+    },
     {
-      "AttributeName": "userId", 
+      "AttributeName": "userId",
       "AttributeType": "S"
     }
-  ], 
+  ],
   "KeySchema": [
     {
-      "KeyType": "HASH", 
+      "KeyType": "HASH",
       "AttributeName": "userId"
-    }, 
+    },
     {
-      "KeyType": "RANGE", 
+      "KeyType": "RANGE",
       "AttributeName": "problemId"
     }
-  ], 
+  ],
   "ProvisionedThroughput": {
-    "ReadCapacityUnits": 5, 
-    "WriteCapacityUnits": 5 
-  } 
+    "ReadCapacityUnits": 5,
+    "WriteCapacityUnits": 5
+  }
 }

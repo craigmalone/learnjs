@@ -72,6 +72,65 @@ function googleSignIn(googleUser) {
     });
 }
 
+/* ===================== DynamoDB functions =============== */
+
+learnjs.sendDbRequest = function(req, retry) {
+    var promise = new $.Deferred();
+    req.on('error', function(error) {
+        if (error.code === "CredentialsError") {
+            learnjs.identity.then(function(identity) {
+                return identity.refresh().then(function() {
+                    return retry();
+                }, function() {
+                    promise.reject(resp);
+                });
+            });
+        } else {
+            promise.reject(error);
+        }
+    });
+    req.on('success', function(resp) {
+        promise.resolve(resp.data);
+    });
+    req.send();
+    return promise;
+};
+
+learnjs.saveAnswer = function(problemId, answer) {
+    console.log("Saving answer: " + answer);
+    return learnjs.identity.then(function(identity) {
+        var db = new AWS.DynamoDB.DocumentClient();
+        var item = {
+            TableName: 'learnjs',
+            Item: {
+                userId: identity.id,
+                problemId: problemId,
+                answer: answer
+            }
+        };
+        return learnjs.sendDbRequest(db.put(item), function() {
+            return learnjs.saveAnswer(problemId, answer);
+        });
+    });
+};
+
+
+learnjs.fetchAnswer = function(problemId) {
+    console.log("fetchAnswer(): problemId=" + problemId);
+    return learnjs.identity.then(function(identity) {
+        var db = new AWS.DynamoDB.DocumentClient();
+        var item = {
+            TableName: 'learnjs',
+            Key: {
+                userId: identity.id,
+                problemId: problemId
+            }
+        };
+        return learnjs.sendDbRequest(db.get(item), function() {
+            return learnjs.fetchAnswer(problemId);
+        });
+    });
+};
 
 /* ==================== Utility Functions ================= */
 
@@ -123,6 +182,25 @@ learnjs.problemView = function(data) {
     var view = $('.templates .problem-view').clone();
     var problemData = learnjs.problems[problemNumber - 1];
     var resultFlash = view.find('.result');
+    var answer = view.find('.answer');
+
+    function checkAnswer() {
+        var test = problemData.code.replace('__', answer.val()) + '; problem();';
+        console.log("checkAnswer(): test=" + test);
+        var evaled = eval(test);
+        return evaled;
+    }
+
+    function checkAnswerClick() {
+        if (checkAnswer()) {
+            var flashContent = learnjs.buildCorrectFlash(problemNumber);
+            learnjs.flashElement(resultFlash, flashContent);
+            learnjs.saveAnswer(problemNumber, answer.val());
+        } else {
+            learnjs.flashElement(resultFlash, 'Incorrect!');
+        }
+        return false;
+    }
 
     if (problemNumber < learnjs.problems.length) {
         var buttonItem = learnjs.template('skip-btn');
@@ -133,23 +211,11 @@ learnjs.problemView = function(data) {
         });
     }
 
-    function checkAnswer() {
-        var answer = view.find('.answer').val();
-        var test = problemData.code.replace('__', answer) + '; problem();';
-        var evaled = eval(test);
-        return evaled;
-    }
-
-    function checkAnswerClick() {
-        if (checkAnswer()) {
-            var correctFlash = learnjs.template('correct-flash');
-            correctFlash = learnjs.buildCorrectFlash(problemNumber);
-            learnjs.flashElement(resultFlash, correctFlash);
-        } else {
-            learnjs.flashElement(resultFlash, 'Incorrect!');
+    learnjs.fetchAnswer(problemNumber).then(function(data) {
+        if (data.Item) {
+            answer.val(data.Item.answer);
         }
-        return false;
-    }
+    });
 
     view.find('.check-btn').click(checkAnswerClick);
     view.find('.title').text('Problem #' + problemNumber);
