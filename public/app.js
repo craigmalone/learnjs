@@ -10,8 +10,8 @@ learnjs.identity = new $.Deferred();
 
 learnjs.problems = [
     {
-        description: "What is truth?",
-        code: "function problem() { return __; }"
+        description: "According to the front page of the Bedford News, March 24, 1932?",
+        code: "How much is a new ABC Electric Washer?"
     },
     {
         description: "Simple Math",
@@ -176,7 +176,7 @@ learnjs.buildCorrectFlash = function (problemNum) {
     var correctFlash = learnjs.template('correct-flash');
     var link = correctFlash.find('a');
     if (problemNum < learnjs.problems.length) {
-        link.attr('href', '#problem-' + (problemNum + 1));
+        link.attr('href', 'https://s3-ap-southeast-2.amazonaws.com/nicheware-family/media/pdf/363/Karen-2017-Xmas.pdf');
     } else {
         link.attr('href', '');
         link.text(" You're Finished!");
@@ -200,9 +200,12 @@ learnjs.problemView = function(data) {
     var answer = view.find('.answer');
 
     function checkAnswer() {
+        /*
         var test = problemData.code.replace('__', answer.val()) + '; problem();';
         console.log("checkAnswer(): test=" + test);
         var evaled = eval(test);
+         */
+        var evaled = answer.val() === "99"
         return evaled;
     }
 
@@ -228,7 +231,8 @@ learnjs.problemView = function(data) {
 
     learnjs.fetchAnswer(problemNumber).then(function(data) {
         if (data.Item) {
-            answer.val(data.Item.answer);
+            /* answer.val(data.Item.answer); */
+            answer.val("");
         }
     });
 
